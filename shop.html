@@ -46,6 +46,11 @@ label{display:block;font-size:13px;color:var(--mt);margin:8px 0 2px}.fi{width:10
 .er{color:var(--rd);font-size:13px;min-height:20px}.nt{background:#fff;border:1px solid var(--ln);border-radius:12px;padding:10px;margin-bottom:8px}.nt small{color:var(--mt)}
 .dn{text-align:center;padding:20px 0}.dn .ck{width:70px;height:70px;border-radius:50%;background:var(--ok);color:#fff;font-size:38px;line-height:70px;margin:0 auto 10px}
 .em{text-align:center;color:var(--mt);padding:40px 14px}
+.hb{position:absolute;top:10px;left:10px;border:0;background:rgba(255,255,255,.92);width:30px;height:30px;border-radius:50%;color:#bbb;font-size:16px;z-index:1}.hb.on{color:var(--rd)}
+.sk{height:230px;background:linear-gradient(90deg,#eee,#f7f3e8,#eee);background-size:200% 100%;animation:sk 1.2s infinite}@keyframes sk{to{background-position:-200% 0}}
+.qa{display:flex;gap:8px;padding:0 12px 6px}.qa button{flex:1;border:1px solid var(--ln);background:#fff;color:var(--nv);border-radius:12px;padding:9px;font-weight:bold;font-size:13px}
+.dt .im{aspect-ratio:1;max-height:300px;border-radius:16px;font-size:20px}.dt h2{font-size:17px;margin:10px 0 4px}.cd .im,.cd .nm{cursor:pointer}
+a.go{display:block;text-align:center;text-decoration:none;margin-top:10px}a.go.wa{background:#1F7A4D}
 </style>
 </head>
 <body>
@@ -58,22 +63,22 @@ const SB_URL="https://zbfdagmsuotdnflugmsv.supabase.co",SB_KEY="sb_publishable_s
 const sb=supabase.createClient(SB_URL,SB_KEY),$=s=>document.querySelector(s),fa=n=>Math.round(+n||0).toLocaleString("fa-IR");
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const ls={g(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},s(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-let P=[],N=[],cat="همه",q="",cart=ls.g("vs_cart",{}),sheet=null,err="",loaded=false;
+let fav=ls.g("vs_fav",[]),sort="",hist=ls.g("vs_hist",[]),dtid=0,lerr="",P=[],N=[],cat="همه",q="",cart=ls.g("vs_cart",{}),sheet=null,err="",loaded=false;
 const fl=x=>x.flash_price>0&&x.flash_ends&&new Date(x.flash_ends)>Date.now(),pe=x=>fl(x)?x.flash_price:x.vesta_price,dis=x=>Math.round((1-pe(x)/x.consumer_price)*100);
 const D="۰۱۲۳۴۵۶۷۸۹",cd=ms=>{const s=Math.max(0,Math.floor(ms/1000));return [s/3600|0,s%3600/60|0,s%60].map(v=>String(v).padStart(2,"0").replace(/\d/g,d=>D[d])).join(":")};
 const en=s=>s.replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d));
-async function load(){const a=await sb.from("products").select("*").order("id");if(!a.error){P=a.data;loaded=true}
+async function load(){let a;try{a=await sb.from("products").select("*").order("id")}catch(e){a={error:e}}if(!a.error){P=a.data;loaded=true;lerr="";ls.s("vs_p",P)}else{lerr=a.error.message||"خطای شبکه";if(!P.length){P=ls.g("vs_p",[]);if(P.length)loaded=true}}
  const b=await sb.from("notifications").select("*").order("created_at",{ascending:false}).limit(15);if(!b.error)N=b.data;
  cart=Object.fromEntries(Object.entries(cart).filter(([i,n])=>P.find(x=>x.id==i&&x.stock>0)).map(([i,n])=>[i,Math.min(n,P.find(x=>x.id==i).stock)]));render()}
 function card(x){const n=cart[x.id]||0,out=x.stock<=0;
- return `<div class="cd">${dis(x)>0?`<span class="bd">${fa(dis(x))}٪</span>`:""}${x.image_url?`<img class="im" loading="lazy" src="${esc(x.image_url)}" alt="">`:`<div class="im">وستا</div>`}<div class="nm">${esc(x.name)}</div><div class="old">${dis(x)>0?fa(x.consumer_price):""}</div><div class="pr">${fa(pe(x))} <small>تومان</small></div>
+ return `<div class="cd" data-id="${x.id}">${dis(x)>0?`<span class="bd">${fa(dis(x))}٪</span>`:""}<button class="hb ${fav.includes(x.id)?"on":""}" onclick="tf(${x.id})" aria-label="علاقه‌مندی">♥</button>${x.image_url?`<img class="im" loading="lazy" src="${esc(x.image_url)}" alt="">`:`<div class="im">وستا</div>`}<div class="nm">${esc(x.name)}</div><div class="old">${dis(x)>0?fa(x.consumer_price):""}</div><div class="pr">${fa(pe(x))} <small>تومان</small></div>
  <div class="lw">${out?"ناموجود":x.stock<=x.low_alert?`تنها ${fa(x.stock)} عدد مانده`:fl(x)?`<span class="ct" data-e="${new Date(x.flash_ends).getTime()}">${cd(new Date(x.flash_ends)-Date.now())}</span>`:""}</div>
  ${out?`<button class="ad" disabled>ناموجود</button>`:n?`<div class="st"><button onclick="chg(${x.id},1)">+</button><b>${fa(n)}</b><button onclick="chg(${x.id},-1)">−</button></div>`:`<button class="ad" onclick="chg(${x.id},1)">افزودن به سبد</button>`}</div>`}
-function render(){const cats=["همه",...new Set(P.map(x=>x.category))],f=P.filter(x=>(cat=="همه"||x.category==cat)&&(!q||x.name.includes(q))),fd=P.filter(x=>fl(x)&&x.stock>0),home=!q&&cat=="همه";
- let h="";if(home)h+=`<div class="hero"><h2>سفارش آنلاین، تحویل درِ خانه</h2><p>مواد غذایی، شوینده و بهداشتی با قیمت ویژه وستا. ارسال رایگان، پرداخت در محل.</p></div>`;
+function render(){const cats=["همه","❤ علاقه‌مندی‌ها",...new Set(P.map(x=>x.category))],f=P.filter(x=>(cat=="همه"||(cat[0]=="❤"?fav.includes(x.id):x.category==cat))&&(!q||x.name.includes(q))).sort((a,b)=>sort=="p"?pe(a)-pe(b):sort=="d"?dis(b)-dis(a):0),fd=P.filter(x=>fl(x)&&x.stock>0),home=!q&&cat=="همه";
+ let h="";if(home)h+=`<div class="hero"><h2>سفارش آنلاین، تحویل درِ خانه</h2><p>مواد غذایی، شوینده و بهداشتی با قیمت ویژه وستا. ارسال رایگان، پرداخت در محل.</p></div><div class="qa"><button onclick="open('orders')">📋 سفارش‌های من</button><button onclick="open('help')">📞 پشتیبانی</button></div>`;
  if(home&&fd.length)h+=`<div class="fl"><div class="sec"><h3>⚡ تخفیف ۲۴ ساعته</h3></div><div class="hs">${fd.map(card).join("")}</div></div>`;
  h+=`<div class="chips">${cats.map(c=>`<button class="chip ${c==cat?"on":""}" onclick="cat='${esc(c)}';render()">${esc(c)}</button>`).join("")}</div>`;
- h+=!loaded?`<div class="em">در حال دریافت کالاها...</div>`:f.length?`<div class="gr">${f.map(card).join("")}</div>`:`<div class="em">کالایی پیدا نشد.</div>`;
+ h+=`<div class="chips" style="padding-top:0">${[["","پیش‌فرض"],["p","ارزان‌ترین"],["d","بیشترین تخفیف"]].map(([k,v])=>`<button class="chip ${sort==k?"on":""}" onclick="sort='${k}';render()">${v}</button>`).join("")}</div>`;h+=!loaded?`<div class="em">${lerr?`اتصال به سرور برقرار نشد.<br><small dir="ltr">${esc(lerr)}</small><br><br><button class="go" style="width:auto;padding:10px 24px" onclick="load()">تلاش دوباره</button>`:`<div class="gr" style="margin:-30px -14px">${'<div class="cd sk"></div>'.repeat(4)}</div>`}</div>`:f.length?`<div class="gr">${f.map(card).join("")}</div>`:`<div class="em">کالایی پیدا نشد.</div>`;
  $("#m").innerHTML=h;const c=Object.entries(cart),cnt=c.reduce((a,[i,n])=>a+n,0),tot=c.reduce((a,[i,n])=>a+n*pe(P.find(x=>x.id==i)),0),b=$("#bar");
  b.style.display=cnt?"flex":"none";b.innerHTML=`<span>🛒 مشاهده سبد · ${fa(cnt)} کالا</span><b>${fa(tot)} تومان</b>`;
  const seen=ls.g("vs_seen",0),nw=N.filter(n=>n.id>seen).length;$("#bg").hidden=!nw;$("#bg").textContent=fa(nw);if(sheet)sh()}
@@ -88,15 +93,26 @@ function sh(){let h="";const c=Object.entries(cart).map(([i,n])=>[P.find(x=>x.id
   <label>نام و نام خانوادگی</label><input class="fi" id="cn" value="${esc(u.n||"")}"><label>شماره موبایل</label><input class="fi" id="cp" inputmode="tel" dir="ltr" placeholder="09123456789" value="${esc(u.p||"")}"><label>آدرس کامل</label><input class="fi" id="ca" value="${esc(u.a||"")}"><div class="er">${esc(err)}</div><button class="go" id="go" onclick="order()">ثبت سفارش</button>`}}
  if(sheet=="notif"){h=`<h3>اعلان‌ها <button class="x" onclick="close()">✕</button></h3>`+(N.length?N.map(n=>`<div class="nt"><b>${esc(n.title)}</b><div>${esc(n.body)}</div><small>${new Date(n.created_at).toLocaleDateString("fa-IR")}</small></div>`).join(""):`<div class="em">اعلانی وجود ندارد.</div>`)}
  if(sheet=="done")h=`<div class="dn"><div class="ck">✓</div><h3 style="display:block">سفارش شما ثبت شد</h3><p>ممنون از اعتماد شما. همکاران ما به‌زودی با شما تماس می‌گیرند و سفارش با پیک ارسال می‌شود.</p><button class="go" onclick="close()">بازگشت به فروشگاه</button></div>`;
- $("#sh").innerHTML=h}
+ if(sheet=="detail"){const x=P.find(y=>y.id==dtid),n=cart[x.id]||0,sm=P.filter(y=>y.category==x.category&&y.id!=x.id&&y.stock>0).slice(0,4);
+ h=`<div class="dt"><h3><span></span><button class="x" onclick="close()">✕</button></h3>${x.image_url?`<img class="im" src="${esc(x.image_url)}" alt="">`:`<div class="im">وستا</div>`}<h2>${esc(x.name)}</h2><div class="fr" style="color:var(--mt)">${esc(x.category)}</div>
+ <div class="old">${dis(x)>0?fa(x.consumer_price)+" تومان · "+fa(dis(x))+"٪ تخفیف":""}</div><div class="pr" style="font-size:22px">${fa(pe(x))} <small>تومان</small></div><div class="lw">${x.stock<=0?"ناموجود":x.stock<=x.low_alert?`تنها ${fa(x.stock)} عدد مانده`:""}${fl(x)?` · پایان تخفیف: <span class="ct" data-e="${new Date(x.flash_ends).getTime()}">${cd(new Date(x.flash_ends)-Date.now())}</span>`:""}</div>
+ ${x.stock<=0?`<button class="ad" disabled style="width:100%">ناموجود</button>`:n?`<div class="st"><button onclick="chg(${x.id},1)">+</button><b>${fa(n)}</b><button onclick="chg(${x.id},-1)">−</button></div>`:`<button class="ad" style="width:100%;padding:12px" onclick="chg(${x.id},1)">افزودن به سبد</button>`}
+ ${sm.length?`<h3 style="margin-top:16px;display:block">کالاهای مشابه</h3><div class="gr" style="padding:0">${sm.map(card).join("")}</div>`:""}</div>`}
+if(sheet=="orders"){h=`<h3>سفارش‌های من <button class="x" onclick="close()">✕</button></h3>`+(hist.length?hist.map((o,k)=>`<div class="nt"><b>${new Date(o.d).toLocaleDateString("fa-IR")} · ${fa(o.total)} تومان</b><div style="font-size:13px">${o.items.map(i=>esc(i.name)+" × "+fa(i.qty)).join("، ")}</div><button class="go" style="margin-top:8px;padding:9px" onclick="rep(${k})">تکرار این سفارش</button></div>`).join(""):`<div class="em">هنوز سفارشی از این گوشی ثبت نشده.</div>`)}
+if(sheet=="help")h=`<h3>پشتیبانی <button class="x" onclick="close()">✕</button></h3><p>برای سؤال درباره کالا یا سفارش با ما تماس بگیرید.</p><a class="go" href="tel:09933930454">📞 تماس تلفنی</a><a class="go wa" href="https://wa.me/989933930454">💬 پیام در واتساپ</a>`;
+$("#sh").innerHTML=h}
 async function order(){const n=$("#cn").value.trim(),p=en($("#cp").value.trim()),a=$("#ca").value.trim();ls.s("vs_cu",{n,p,a});
  if(n.length<3)err="نام خود را بنویسید.";else if(!/^09\d{9}$/.test(p))err="شماره موبایل را درست بنویسید (مثل ۰۹۱۲۳۴۵۶۷۸۹).";else if(a.length<8)err="آدرس را کامل بنویسید.";else err="";
  if(err)return sh();
- const items=Object.entries(cart).map(([i,k])=>{const x=P.find(y=>y.id==i);return{id:x.id,name:x.name,qty:k,price:pe(x)}}),total=items.reduce((s,i)=>s+i.price*i.qty,0);
+ const items=Object.entries(cart).map(([i,k])=>{const x=P.find(y=>y.id==i);return{id:x.id,name:x.name,qty:k,price:pe(x),cp:x.consumer_price}}),total=items.reduce((s,i)=>s+i.price*i.qty,0);
  $("#go").disabled=true;$("#go").textContent="در حال ثبت...";
  const r=await sb.from("orders").insert({customer_name:n,phone:p,address:a,items,total});
  if(r.error){err="ثبت سفارش انجام نشد. اینترنت را چک کنید و دوباره تلاش کنید.";return sh()}
- cart={};ls.s("vs_cart",cart);open("done");render()}
+ hist.unshift({d:new Date().toISOString(),total,items});ls.s("vs_hist",hist.slice(0,15));cart={};ls.s("vs_cart",cart);open("done");render()}
+function detail(id){dtid=id;open("detail")}
+function tf(id){fav=fav.includes(id)?fav.filter(i=>i!=id):[...fav,id];ls.s("vs_fav",fav);render()}
+function rep(k){hist[k].items.forEach(i=>{const x=P.find(y=>y.id==i.id);if(x&&x.stock>0)cart[x.id]=Math.min(x.stock,i.qty)});ls.s("vs_cart",cart);render();open("cart")}
+$("#m").addEventListener("click",e=>{const c=e.target.closest(".cd");if(c&&e.target.closest(".im,.nm"))detail(+c.dataset.id)});
 $("#q").oninput=e=>{q=e.target.value.trim();render()};
 $("#bar").onclick=()=>open("cart");
 $("#bl").onclick=()=>{ls.s("vs_seen",Math.max(0,...N.map(n=>n.id)));open("notif");render()};
