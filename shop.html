@@ -60,7 +60,7 @@ a.go{display:block;text-align:center;text-decoration:none;margin-top:10px}a.go.w
 <div class="ov" id="ov"><div class="sh" id="sh"></div></div>
 <script>
 const SB_URL="https://zbfdagmsuotdnflugmsv.supabase.co",SB_KEY="sb_publishable_szKwJtt2HTzWP8QoVlGdfg_0IHmaq65";
-const sb=supabase.createClient(SB_URL,SB_KEY),$=s=>document.querySelector(s),fa=n=>Math.round(+n||0).toLocaleString("fa-IR");
+const sb=supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false},global:{fetch:(u,o)=>fetch(u,{...o,signal:AbortSignal.timeout(15000)})}}),$=s=>document.querySelector(s),fa=n=>Math.round(+n||0).toLocaleString("fa-IR");
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const ls={g(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},s(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 let fav=ls.g("vs_fav",[]),sort="",hist=ls.g("vs_hist",[]),dtid=0,lerr="",P=[],N=[],cat="همه",q="",cart=ls.g("vs_cart",{}),sheet=null,err="",loaded=false;
