@@ -1,0 +1,1 @@
+{"id": "/vesta-panel/panel", "name": "وستا مدیریت", "short_name": "وستا مدیریت", "start_url": "./index.html", "scope": "./", "display": "standalone", "dir": "rtl", "lang": "fa", "background_color": "#F6F4EE", "theme_color": "#14286B", "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png"}, {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"}]}
